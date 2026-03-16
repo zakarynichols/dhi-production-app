@@ -31,8 +31,14 @@ header h1 {
   font-weight: 600;
 }
 
+header p {
+  color: #888;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
 main {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
@@ -47,13 +53,14 @@ section {
 
 section h2 {
   color: #1a1a2e;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
 
 section h3 {
   color: #16213e;
   margin-bottom: 1rem;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 section p {
@@ -66,5 +73,211 @@ pre {
   padding: 1rem;
   border-radius: 4px;
   overflow-x: auto;
+  font-size: 0.85rem;
+}
+
+.create-bin form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.create-bin input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.create-bin button {
+  padding: 0.75rem 1.5rem;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.create-bin button:hover {
+  background: #16213e;
+}
+
+.create-bin button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.bins-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+}
+
+.bins-list {
+  align-self: start;
+}
+
+.bins-list ul {
+  list-style: none;
+}
+
+.bins-list li {
+  padding: 0.75rem;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bins-list li:hover {
+  background: #f9f9f9;
+  border-color: #ddd;
+}
+
+.bins-list li.selected {
+  background: #1a1a2e;
+  color: white;
+  border-color: #1a1a2e;
+}
+
+.bins-list li .bin-id {
+  font-family: monospace;
   font-size: 0.9rem;
+}
+
+.bins-list li .bin-name {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.bins-list li.selected .bin-name {
+  color: #aaa;
+}
+
+.bins-list .delete-btn {
+  float: right;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.bins-list .delete-btn:hover {
+  background: #c82333;
+}
+
+.bin-details .bin-header {
+  margin-bottom: 1.5rem;
+}
+
+.bin-url {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.bin-url code {
+  background: #f5f5f5;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.bin-url button {
+  padding: 0.5rem 1rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.bin-url button:hover {
+  background: #218838;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.requests-list ul {
+  list-style: none;
+}
+
+.requests-list li {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+}
+
+.request-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.method {
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.method.GET { background: #28a745; color: white; }
+.method.POST { background: #007bff; color: white; }
+.method.PUT { background: #ffc107; color: black; }
+.method.DELETE { background: #dc3545; color: white; }
+.method.PATCH { background: #6f42c1; color: white; }
+
+.path {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.time {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.client-ip {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+details {
+  margin-top: 0.5rem;
+}
+
+details summary {
+  cursor: pointer;
+  color: #007bff;
+  font-size: 0.85rem;
+}
+
+details pre {
+  margin-top: 0.5rem;
+}
+
+.empty {
+  color: #999;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .bins-container {
+    grid-template-columns: 1fr;
+  }
 }
