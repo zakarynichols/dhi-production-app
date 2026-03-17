@@ -17,11 +17,11 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '4'
+          memory: 2G
+        reservations:
           cpus: '1'
           memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
     networks:
       - app-network
     read_only: true
@@ -31,22 +31,45 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  pgbouncer:
+    image: dhi.io/pgbouncer:1.25-debian13
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-appuser}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-appdb}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    networks:
+      - app-network
+
   api:
     build:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      DB_HOST: postgres
+      DB_HOST: pgbouncer
       DB_PORT: 5432
       DB_USER: ${DB_USER:-appuser}
       DB_PASSWORD: ${DB_PASSWORD:-changeme}
       DB_NAME: ${DB_NAME:-appdb}
       SERVER_PORT: 8080
+      DB_MAX_OPEN_CONNS: 50
+      DB_MAX_IDLE_CONNS: 10
     depends_on:
-      postgres:
-        condition: service_healthy
+      pgbouncer:
+        condition: service_started
     deploy:
-      replicas: 2
+      replicas: 16
       resources:
         limits:
           cpus: '1'
