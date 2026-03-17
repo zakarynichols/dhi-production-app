@@ -153,6 +153,13 @@ pre {
   color: #666;
 }
 
+.bins-list li .request-count {
+  display: block;
+  font-size: 0.75rem;
+  color: #28a745;
+  font-weight: bold;
+}
+
 .bins-list li.selected .bin-name {
   color: #aaa;
 }
