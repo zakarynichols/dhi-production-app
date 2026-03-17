@@ -1,13 +1,29 @@
 import React from 'react';
 import './index.css';
 
+interface Bin {
+  id: string;
+  name?: string;
+  requestCount?: number;
+}
+
+interface Request {
+  id: string;
+  method: string;
+  path: string;
+  created_at: string;
+  body?: string;
+  headers?: Record<string, string>;
+  client_ip?: string;
+}
+
 function App() {
-  const [bins, setBins] = React.useState([]);
-  const [selectedBin, setSelectedBin] = React.useState(null);
-  const [requests, setRequests] = React.useState([]);
+  const [bins, setBins] = React.useState<Bin[]>([]);
+  const [selectedBin, setSelectedBin] = React.useState<string | null>(null);
+  const [requests, setRequests] = React.useState<Request[]>([]);
   const [binName, setBinName] = React.useState('');
   const [loading, setLoading] = React.useState(false);
-  const [copied, setCopied] = React.useState(null);
+  const [copied, setCopied] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     loadBins();
@@ -23,7 +39,7 @@ function App() {
     }
   };
 
-  const createBin = async (e) => {
+  const createBin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!binName.trim()) return;
     
@@ -45,22 +61,25 @@ function App() {
     setLoading(false);
   };
 
-  const loadRequests = async (binId) => {
+  const loadRequests = async (binId: string) => {
     try {
       const res = await fetch(`/api/bins/${binId}/requests`);
       const data = await res.json();
       setRequests(data);
+      setBins(bins.map(bin => 
+        bin.id === binId ? { ...bin, requestCount: data.length } : bin
+      ));
     } catch (err) {
       console.error('Error loading requests:', err);
     }
   };
 
-  const selectBin = async (binId) => {
+  const selectBin = async (binId: string) => {
     setSelectedBin(binId);
     loadRequests(binId);
   };
 
-  const deleteBin = async (binId) => {
+  const deleteBin = async (binId: string) => {
     try {
       await fetch(`/api/bins/${binId}`, { method: 'DELETE' });
       setBins(bins.filter(b => b.id !== binId));
@@ -73,7 +92,7 @@ function App() {
     }
   };
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(text);
     setTimeout(() => setCopied(null), 2000);
@@ -86,7 +105,7 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>Request Bin</h1>
+        <h1>Request Bin - v3</h1>
         <p>Capture and inspect HTTP requests</p>
       </header>
       
@@ -121,9 +140,12 @@ function App() {
                   >
                     <span className="bin-id">{bin.id}</span>
                     {bin.name && <span className="bin-name">{bin.name}</span>}
+                    {bin.requestCount !== undefined && (
+                      <span className="request-count">{bin.requestCount} requests</span>
+                    )}
                     <button 
                       className="delete-btn"
-                      onClick={(e) => { e.stopPropagation(); deleteBin(bin.id); }}
+                      onClick={(e: React.MouseEvent) => { e.stopPropagation(); deleteBin(bin.id); }}
                     >
                       Delete
                     </button>

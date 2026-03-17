@@ -13,4 +13,4 @@ RUN npm run build
 
 FROM dhi.io/nginx:1.29-alpine3.22 AS runtime
 
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
