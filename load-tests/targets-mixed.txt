@@ -1,0 +1,5 @@
+GET https://localhost:8443/
+GET https://localhost:8443/health
+POST https://localhost:8443/0f06bbc6
+GET https://localhost:8443/api/bins
+GET https://localhost:8443/api/bins/0f06bbc6/requests
