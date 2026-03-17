@@ -69,7 +69,7 @@ services:
       pgbouncer:
         condition: service_started
     deploy:
-      replicas: 4
+      replicas: 8
       resources:
         limits:
           cpus: '1'
