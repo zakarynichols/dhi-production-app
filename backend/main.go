@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -29,6 +30,8 @@ type Config struct {
 	ServerPort     string
 	RateLimitRPS   float64
 	RateLimitBurst int
+	DBMaxOpenConns int
+	DBMaxIdleConns int
 }
 
 type App struct {
@@ -64,12 +67,23 @@ func loadConfig() Config {
 		ServerPort:     getEnv("SERVER_PORT", "8080"),
 		RateLimitRPS:   10.0,
 		RateLimitBurst: 20,
+		DBMaxOpenConns: getEnvInt("DB_MAX_OPEN_CONNS", 25),
+		DBMaxIdleConns: getEnvInt("DB_MAX_IDLE_CONNS", 5),
 	}
 }
 
 func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
 	}
 	return defaultValue
 }
@@ -265,13 +279,12 @@ func (app *App) captureRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var exists bool
-	err := app.db.QueryRowContext(r.Context(),
-		"SELECT EXISTS(SELECT 1 FROM bins WHERE id = $1)", binID).Scan(&exists)
-	if err != nil || !exists {
-		http.Error(w, "Bin not found", http.StatusNotFound)
-		return
-	}
+	// Check bin exists asynchronously - fire and forget
+	go func() {
+		var exists bool
+		_ = app.db.QueryRowContext(context.Background(),
+			"SELECT EXISTS(SELECT 1 FROM bins WHERE id = $1)", binID).Scan(&exists)
+	}()
 
 	clientIP := r.Header.Get("X-Forwarded-For")
 	if clientIP == "" {
@@ -291,13 +304,16 @@ func (app *App) captureRequestHandler(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	headersJSON, _ := json.Marshal(headers)
 
-	_, err = app.db.ExecContext(r.Context(),
-		`INSERT INTO requests (bin_id, method, path, headers, body, client_ip, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		binID, r.Method, r.URL.Path, headersJSON, string(body), clientIP, time.Now())
-	if err != nil {
-		log.Printf("Error capturing request: %v", err)
-	}
+	// Async write - spawn goroutine
+	go func() {
+		_, err := app.db.ExecContext(context.Background(),
+			`INSERT INTO requests (bin_id, method, path, headers, body, client_ip, created_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			binID, r.Method, r.URL.Path, headersJSON, string(body), clientIP, time.Now())
+		if err != nil {
+			log.Printf("Error capturing request: %v", err)
+		}
+	}()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
@@ -416,8 +432,8 @@ func (app *App) connectDB(cfg Config) error {
 		return fmt.Errorf("unable to connect to database: %w", err)
 	}
 
-	app.db.SetMaxOpenConns(25)
-	app.db.SetMaxIdleConns(5)
+	app.db.SetMaxOpenConns(cfg.DBMaxOpenConns)
+	app.db.SetMaxIdleConns(cfg.DBMaxIdleConns)
 	app.db.SetConnMaxLifetime(5 * time.Minute)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
